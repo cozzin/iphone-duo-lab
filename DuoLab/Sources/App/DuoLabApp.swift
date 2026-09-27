@@ -33,5 +33,6 @@ struct RootView: View {
             .navigationDestination(for: Experiment.self) { $0.destination }
         }
         .debugOverlay(isEnabled: router.showsOverlay)
+        .providesActiveDivisions()
     }
 }

@@ -12,6 +12,10 @@ struct CustomPopupExperiment: View {
         switch router.variant {
         case "arrEmpty", "arrClear", "arrAlert":
             ArrangementAlertHost(variant: router.variant ?? "")
+        case "centerAsIs", "centerSplit", "centerMove":
+            CenteredLayoutExperiment(variant: router.variant ?? "")
+        case "toolsBefore", "toolsAfter":
+            FloatingElementsDemo(avoids: router.variant == "toolsAfter")
         case "zNone", "zAlert":
             ZStackArrangementAlertHost(showsAlert: router.variant == "zAlert")
         default:
@@ -129,6 +133,59 @@ struct ZStackArrangementAlertHost: View {
             }
         }
         .navigationTitle("03 ZStack")
+    }
+}
+
+/// Before/after for the reusable tools in Shared/HingeAvoidance.swift:
+/// bottom CTA, FAB and toast use `.avoidingHinge()`; the popup uses `hingeAwarePopup`.
+struct FloatingElementsDemo: View {
+    var avoids: Bool
+    @State private var showsPopup = false
+
+    var body: some View {
+        ZStack {
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 12)], spacing: 12) {
+                    ForEach(0..<20) { SampleCard(index: $0) }
+                }
+                .padding()
+            }
+            // Toast: centered, a little above the middle — typical spot that lands on a horizontal fold
+            Text("Saved to library")
+                .padding(.horizontal, 16).padding(.vertical, 10)
+                .background(.black.opacity(0.8), in: .capsule).foregroundStyle(.white)
+                .measured("toast")
+                .modifier(Avoid(enabled: avoids))
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    // FAB: centered horizontally — lands on a vertical fold
+                    Button("Add", systemImage: "plus") { showsPopup = true }
+                        .labelStyle(.iconOnly).font(.title2).padding(18)
+                        .background(.tint, in: .circle).foregroundStyle(.white)
+                        .measured("fab")
+                        .modifier(Avoid(enabled: avoids))
+                    Spacer()
+                }
+                Button("Continue") {}
+                    .buttonStyle(.borderedProminent).controlSize(.large)
+                    .measured("cta")
+                    .modifier(Avoid(enabled: avoids))
+                    .padding(.bottom)
+            }
+        }
+        .hingeAwarePopup(isPresented: showsPopup) {
+            PopupCard(title: "hingeAwarePopup") { showsPopup = false }
+        }
+        .navigationTitle(avoids ? "03 tools (after)" : "03 tools (before)")
+    }
+
+    private struct Avoid: ViewModifier {
+        var enabled: Bool
+        func body(content: Content) -> some View {
+            if enabled { content.avoidingHinge() } else { content }
+        }
     }
 }
 
