@@ -9,6 +9,15 @@ struct CustomPopupExperiment: View {
     @State private var trigger: CGRect?
 
     var body: some View {
+        switch router.variant {
+        case "arrEmpty", "arrClear", "arrAlert":
+            ArrangementAlertHost(variant: router.variant ?? "")
+        default:
+            standard
+        }
+    }
+
+    private var standard: some View {
         HStack {
             buttons.frame(maxWidth: .infinity)
             buttons.frame(maxWidth: .infinity)   // same buttons on both sides to test "stay contextual"
@@ -62,6 +71,60 @@ struct CustomPopupExperiment: View {
 
     private func binding(_ kind: Kind) -> Binding<Bool> {
         Binding { presented == kind } set: { if !$0 { presented = nil } }
+    }
+}
+
+/// Idea under test: host the screen as the *secondary* of an overlay ArrangementView and put a custom
+/// alert in the *primary*. When folded, the overlay arrangement moves the primary to the trailing/bottom
+/// region by itself. Question: when no alert is shown, does an empty primary still take half the screen?
+///   arrEmpty → primary = EmptyView, arrClear → primary = Color.clear, arrAlert → primary = alert card
+struct ArrangementAlertHost: View {
+    var variant: String
+
+    var body: some View {
+        ArrangementView {
+            primary
+                .measured("primary")
+        } secondary: {
+            ScreenContent()
+                .measured("secondary")
+        }
+        .arrangementViewStyle(.overlay)
+        .navigationTitle("03 \(variant)")
+    }
+
+    @ViewBuilder private var primary: some View {
+        switch variant {
+        case "arrClear": Color.clear
+        case "arrAlert": PopupCard(title: "Custom alert in primary") {}
+        default: EmptyView()
+        }
+    }
+}
+
+/// Stand-in for an ordinary screen: scrolling content plus a fixed button.
+private struct ScreenContent: View {
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 12)], spacing: 12) {
+                    ForEach(0..<20) { SampleCard(index: $0) }
+                }
+                .padding()
+            }
+            Button("Fixed action") {}.buttonStyle(.borderedProminent).padding()
+        }
+        .border(.cyan, width: 3)
+    }
+}
+
+extension View {
+    /// Logs and outlines this view's global frame (debug only).
+    func measured(_ name: String) -> some View {
+        border(.pink, width: 2)
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: {
+                duoLog.notice("FRAME \(name, privacy: .public)=\(String(describing: $0), privacy: .public)")
+            }
     }
 }
 
