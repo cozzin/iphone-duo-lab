@@ -57,6 +57,10 @@ Path: `Xcode-27.1.0-Beta.app/.../iPhoneSimulator27.1.sdk/System/Library/Framewor
 | M2 | `simctl io screenshot --display=<UUID>` captures each display separately | Q8 |
 | M3 | `devicectl device motion hinge-angle -d <udid>` prints `Angle: 0.0° … Range:0-180°` in the simulator, but does not honor `--session-timeout` and hangs until `--timeout` | Q8 |
 | M4 | `simctl ui` options are only `appearance`, `increase_contrast`, `content_size`. There is no posture control | Q8 |
+| M5 | Probe app (`tools/probe`), outer display, closed, portrait, **iOS 27.1 SDK**: window 466×678 pt; `GeometryReader` size 382×644; safe area T0 L0 B34 **R84**; h=compact, v=regular; `toolbarVerticalEdge=.trailing`; occlusion and division regions: none (also with `.includeInactive`); hinge `closed 0°` | Q1, Q3, Q7 |
+| M7 | Probe `-withToolbar` (NavigationStack + toolbar, 27.1): content 382×562; safe area T82 L0 B34 R84; Close at the top of the vertical bar, bottom-bar items at the bottom | Q7 |
+| M8 | Probe `-noVerticalBar` (`toolbarVerticalBehavior(.disabled)`): content 466×462; safe area T134 L0 B82 R0; status bar goes horizontal to the left of the top-right camera; **still no occlusion region** | Q7 |
+| M6 | The same probe linked with **SDK 27.0** (compatibility): window 386 pt wide, left of the camera/status column; safe area R0; `toolbarVerticalEdge=nil`. Reproduces S1 0:30 | Q5, Q7 |
 
 ## Third party 👥
 
@@ -75,4 +79,5 @@ Path: `Xcode-27.1.0-Beta.app/.../iPhoneSimulator27.1.sdk/System/Library/Framewor
 
 1. **Are inactive reserved regions returned by default?** S3 (7:50) says only active regions are returned unless you pass `.includeInactive`. D5 says `reservedRegions` returns intersecting regions "regardless of whether they are currently active". → Verify in experiment 03.
 2. **Orientation on the inner display.** S1 (2:46) says "The inner display doesn't honor your supported interface orientations." S1 (3:57) says "iPhone Duo respects your supported interface orientations, but your app will scale on the inner display". → Verify in experiment 05 with a portrait-only target.
-3. **Name of the compression behavior value.** A summary of S2 wrote it as `.prefersTabBarItems`, but the SDK (H6) spells it `.prefersTabBar`. **The SDK wins.**
+3. **Is the outer camera an occlusion region?** D2 says "the outer front-facing camera always occludes your view". Our measurement M5 (closed, vertical bar active) found **no occlusion region**. The camera column is covered by the trailing safe-area inset instead. With the vertical bar disabled (M8) there is still no occlusion region, and the camera is covered by the top inset. Conclusion so far: on the outer display, respecting the safe area is sufficient. The occlusion API matters for the inner camera, which the simulator can't activate.
+4. **Name of the compression behavior value.** A summary of S2 wrote it as `.prefersTabBarItems`, but the SDK (H6) spells it `.prefersTabBar`. **The SDK wins.**
