@@ -12,6 +12,7 @@ A Tuist-based SwiftUI sample app for testing Apple's guidance on building apps f
 | 1-b | Width-breakpoint "3 tiers" vs size classes vs hybrid | same | [docs/research/01b-breakpoint-vs-size-class.md](docs/research/01b-breakpoint-vs-size-class.md) |
 | 2 | Player render on top, controls below in the partially open posture: `ArrangementView` | `02_PlayerArrangement` | [docs/research/02-player-arrangement.md](docs/research/02-player-arrangement.md) |
 | 3 | Custom popups and the hinge: how to avoid it | `03_CustomPopup` | [docs/research/03-custom-popup.md](docs/research/03-custom-popup.md) |
+| 3-b | Strategy for keeping self-laid-out controls off the hinge | `Shared/` (planned) | [docs/research/03b-hinge-avoidance-strategy.md](docs/research/03b-hinge-avoidance-strategy.md) |
 | 4 | Practical uses of `.onHingeChange` | `04_Hinge` | [docs/research/04-hinge.md](docs/research/04-hinge.md) |
 | 5 | PiP pinned on top + resized app, portrait-only apps | `05_PiPResize` | [docs/research/05-pip-resize.md](docs/research/05-pip-resize.md) |
 | 6 | Additional considerations for adapting apps | — | [docs/considerations.md](docs/considerations.md) |
