@@ -2,7 +2,24 @@
 
 > **EN summary:** Capture works per display (`simctl io screenshot --display=<UUID>`). Hinge *readback* works (`devicectl device motion hinge-angle`). There is **no public CLI to set a pose**; it is only exposed through Device Hub's UI (buttons, plus a hinge slider when holding ⌥). The recommended design has three layers. L1: snapshot tests at the target widths and size classes (fast, CI-friendly, no real fold). L2: a simulator capture script driven by deep links, with the pose set by a Device Hub accessibility helper or semi-manually, waiting until the hinge angle is stable. L3: XCUITest for rotation and in-app state.
 
-상태: **plan 단계와 이번 조사에서 확인한 내용까지 정리. 스크립트는 아직입니다.**
+상태: **L2 반자동 스크립트를 구현했습니다(`tools/duo-capture/capture.sh`). 닫힌 자세에서 동작을 확인했습니다.**
+
+## 사용법
+
+```sh
+# 1) Device Hub에서 자세를 설정합니다(버튼, 또는 ⌥ 힌지 슬라이더).
+# 2) 현재 자세로 모든 실험을 캡처합니다. 힌지 각도로 closed / open / half<각도>를 자동으로 판별합니다.
+tools/duo-capture/capture.sh
+tools/duo-capture/capture.sh 02:overlay 02:split          # 일부 실험만
+tools/duo-capture/capture.sh -a dev.duolab.portraitonly 05 # portrait 고정 타겟
+tools/duo-capture/capture.sh -l split-left 01              # Split View처럼 수동으로 만든 상황에 라벨 추가
+```
+
+실행 중 겪은 문제와 해결:
+- **`simctl openurl`의 확인 팝업.** 두 앱이 같은 URL scheme을 쓰면 "…에서 열겠습니까?" 알림이 뜨고, 이 알림은 큐에 남습니다. → 딥링크를 **launch argument(`-openURL`)**로 전달하도록 바꾸고, 앱마다 scheme을 분리했습니다.
+- **디스플레이 UUID가 바뀜.** 시뮬레이터를 재부팅하면 UUID가 바뀝니다. → 매 실행마다 `simctl io enumerate`로 다시 조회합니다. 폭이 작은 쪽을 외부 화면으로 판단합니다.
+- **꺼진 화면 캡처.** 닫힌 상태의 내부 화면처럼 꺼진 화면은 검은 이미지가 됩니다. → 축소한 뒤 20KB 미만이면 삭제합니다.
+- **재부팅 직후 첫 실행이 느림.** 실행 후 4초를 기다립니다.
 
 ## 확인된 사실 (직접 측정)
 

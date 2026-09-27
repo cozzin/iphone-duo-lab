@@ -64,6 +64,7 @@ struct VideoSurface: View {
     var body: some View {
         VideoPlayer(player: player)
             .background(.black)
+            .border(.pink, width: 3)   // render frame
             .overlay(alignment: .topLeading) {
                 Text("RENDER").font(.caption.bold()).padding(6).background(.yellow, in: .capsule).padding(8)
             }
@@ -75,11 +76,14 @@ struct PlayerControls: View {
     @Environment(\.overlayArrangementZIndex) private var zIndex
     @Environment(\.splitArrangementAxis) private var splitAxis
     @State private var progress: Double = 0.3
+    @State private var frame: CGRect = .zero
 
     var body: some View {
         VStack(spacing: 16) {
             Text("CONTROLS  zIndex:\(zIndex) splitAxis:\(splitAxis.map { "\($0)" } ?? "-")")
                 .font(.caption.monospaced().bold())
+            Text("frame \(Int(frame.minX)),\(Int(frame.minY)) \(Int(frame.width))×\(Int(frame.height))")
+                .font(.caption2.monospaced())
             Slider(value: $progress)
             HStack(spacing: 32) {
                 Button("Back 10s", systemImage: "gobackward.10") {}
@@ -93,9 +97,14 @@ struct PlayerControls: View {
             .labelStyle(.iconOnly)
         }
         .padding()
-        // When layered over the video (zIndex > 0) behave like a translucent HUD; side-by-side → solid panel.
-        .frame(maxWidth: .infinity, maxHeight: zIndex > 0 ? nil : .infinity, alignment: .bottom)
-        .background(zIndex > 0 ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(.background.secondary))
+        .background(.ultraThinMaterial, in: .rect(cornerRadius: 16))
+        .padding(8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .border(.cyan, width: 3)   // primary/controls frame
+        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: {
+            frame = $0
+            duoLog.notice("PLAYER controls frame=\(String(describing: $0), privacy: .public) zIndex=\(zIndex) splitAxis=\(String(describing: splitAxis), privacy: .public)")
+        }
     }
 }
 

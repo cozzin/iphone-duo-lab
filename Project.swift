@@ -2,13 +2,13 @@ import ProjectDescription
 
 // Shared Info.plist keys for both app targets.
 // `orientations` differs so experiment 05 can compare a portrait-only build against a fully rotatable one.
-func infoPlist(orientations: [String]) -> InfoPlist {
+func infoPlist(orientations: [String], urlScheme: String) -> InfoPlist {
     .extendingDefault(with: [
         "UILaunchScreen": [:],
         "UIApplicationSceneManifest": ["UIApplicationSupportsMultipleScenes": true],
         "UISupportedInterfaceOrientations": .array(orientations.map { .string($0) }),
         "CFBundleURLTypes": [
-            ["CFBundleURLName": "dev.duolab", "CFBundleURLSchemes": ["duolab"]],
+            ["CFBundleURLName": "dev.duolab", "CFBundleURLSchemes": [.string(urlScheme)]],
         ],
     ])
 }
@@ -29,7 +29,7 @@ let project = Project(
             product: .app,
             bundleId: "dev.duolab.app",
             deploymentTargets: .iOS("27.1"),
-            infoPlist: infoPlist(orientations: allOrientations),
+            infoPlist: infoPlist(orientations: allOrientations, urlScheme: "duolab"),
             sources: ["DuoLab/Sources/**"]
         ),
         // Same sources, portrait only (experiment 05).
@@ -39,7 +39,7 @@ let project = Project(
             product: .app,
             bundleId: "dev.duolab.portraitonly",
             deploymentTargets: .iOS("27.1"),
-            infoPlist: infoPlist(orientations: ["UIInterfaceOrientationPortrait"]),
+            infoPlist: infoPlist(orientations: ["UIInterfaceOrientationPortrait"], urlScheme: "duolab-portrait"),
             sources: ["DuoLab/Sources/**"]
         ),
     ]

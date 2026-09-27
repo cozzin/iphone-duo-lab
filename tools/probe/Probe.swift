@@ -1,3 +1,7 @@
+// Single-file probe used for the first measurements (docs/sources.md M5–M8).
+// Caveat: it logs once in onAppear and reads reserved regions through GeometryReader, so it misses the
+// occlusion regions that arrive after the first layout pass (see M9). Use the DuoLab debug overlay
+// (onGeometryChange, reactive) for reserved regions.
 import SwiftUI
 import os
 

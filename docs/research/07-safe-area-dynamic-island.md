@@ -1,6 +1,6 @@
 # 07. 배경은 화면 끝까지 채우라는데, 우측 상단 Dynamic Island는 피해야 하지 않나?
 
-> **Measured (outer, closed, portrait, iOS 27.1 SDK):** full-screen 466×678 pt window; safe area T0/L0/B34/**R84**; background renders under the camera; `toolbarVerticalEdge == .trailing`; no occlusion region reported. With `toolbarVerticalBehavior(.disabled)`: safe area T134/B82/R0, the status bar goes horizontal next to the camera, still no occlusion region. **Respecting the safe area is sufficient to avoid the outer camera and Dynamic Island.**
+> **Measured (outer, closed, portrait, iOS 27.1 SDK):** full-screen 466×678 pt window; safe area T0/L0/B34/**R84**; background renders under the camera; `toolbarVerticalEdge == .trailing`; **two active occlusion regions** (camera hole 37×37 pt at (399.7, 29.3); camera + status column 84×170 pt at (382, 0)). They arrive a moment *after* the first layout pass, so read them reactively (`onGeometryChange`). With `toolbarVerticalBehavior(.disabled)`: safe area T134/B82/R0 and the status bar goes horizontal next to the camera. **Respecting the safe area avoids the outer camera and Dynamic Island; the occlusion regions give their exact shape for full-bleed custom UI.**
 >
 > **EN summary:** Yes. Backgrounds may bleed under the camera and the vertical bar. Apple says so explicitly, and the system draws the camera and Dynamic Island on top of your background. Anything *meaningful* (text, controls, subtitles, key parts of artwork) must stay inside the safe area. On iPhone Duo that area is asymmetric: the inset is on the side of the vertical bar, not the top. When a view goes full-width without bars, it must not conflict with the Dynamic Island or the status bar. Touch targets always go inside the safe area.
 
@@ -10,7 +10,7 @@
 
 | 빌드 SDK | 앱 창 | safe area (T/L/B/R) | 세로 바 | reserved region | 캡처 |
 |----------|-------|---------------------|---------|-----------------|------|
-| **27.1** | **466×678pt 전체 화면**. 콘텐츠 영역은 382×644 | **0 / 0 / 34 / 84** | `toolbarVerticalEdge = .trailing` | occlusion 0개, division 0개 (`.includeInactive` 포함) | ![](../images/07-safe-area/outer-closed-portrait-sdk27.1.png) |
+| **27.1** | **466×678pt 전체 화면**. 콘텐츠 영역은 382×644 | **0 / 0 / 34 / 84** | `toolbarVerticalEdge = .trailing` | **occlusion 2개(활성)**: 카메라 구멍 (399.7, 29.3) 37×37, 카메라+status 열 (382, 0) 84×170. division 0개 | ![](../images/07-safe-area/outer-closed-portrait-sdk27.1.png) |
 | 27.1 + `NavigationStack` + toolbar | 466×678. 콘텐츠 영역 382×562 | **82 / 0 / 34 / 84** (82 = large title) | `.trailing`. Close는 세로 바 **위**, 하단 툴바 아이템은 세로 바 **아래** | 0개 | ![](../images/07-safe-area/outer-closed-portrait-sdk27.1-withToolbar.png) |
 | 27.1 + `toolbarVerticalBehavior(.disabled)` | 466×678. 콘텐츠 영역 **466×462** | **134 / 0 / 82 / 0** | nil. **status bar가 가로로 바뀌어 카메라 왼쪽 상단**에 위치하고, 툴바는 위와 아래 가로 바로 이동 | 0개 | ![](../images/07-safe-area/outer-closed-portrait-sdk27.1-noVerticalBar.png) |
 | 27.0 (호환 모드) | **386pt 폭**. 오른쪽 카메라·status 열은 앱 밖(검은색) | 0 / 0 / 34 / 0 | nil | 0개 | ![](../images/07-safe-area/outer-closed-portrait-sdk27.0.png) |
@@ -19,7 +19,11 @@
 - 27.1 SDK로 빌드하면 **배경이 카메라 펀치홀과 status 열 아래까지 그려집니다**(체크무늬 배경 참고). 시스템이 카메라와 status를 그 위에 올립니다. 즉 "배경은 끝까지"는 **안전합니다**.
 - 외부 화면 세로 방향의 **top inset은 0**입니다. 카메라가 오른쪽 위 모서리에 있지만, 그 영역은 **trailing inset 84pt**로 표현됩니다. 기존 iPhone처럼 top inset만 피하는 코드는 **카메라와 status 열 위에 컨텐츠를 올려놓게 됩니다**.
 - 툴바가 없는 화면에서도 `toolbarVerticalEdge`는 `.trailing`입니다. 즉 세로 바 영역이 "예약"되어 있습니다.
-- **외부 카메라는 occlusion region으로 보고되지 않았습니다.** 세로 바를 끈 상태에서도 마찬가지입니다. D2의 "the outer front-facing camera always occludes your view"라는 설명과 다릅니다. 측정 결과로 보면, 외부 카메라는 **safe area inset으로 처리됩니다**. 세로 바가 켜져 있으면 trailing 84pt, 꺼져 있으면 top 134pt(status + nav bar)입니다. 따라서 **실무에서는 safe area만 지키면 외부 카메라와 Dynamic Island는 자동으로 피해집니다**. occlusion API는 내부 카메라(활성 시)용으로 보는 것이 맞아 보입니다(카메라 활성화 상태는 시뮬레이터에서 재현 불가, T2).
+- **외부 카메라는 occlusion region으로 보고됩니다. 다만 첫 레이아웃 직후에는 비어 있습니다.** (정정) 처음 만든 probe는 `onAppear` 시점에 한 번만 기록했고, 영역을 `GeometryReader`로 읽었습니다. 그래서 "occlusion 0개"로 잘못 측정했습니다. 이후 DuoLab의 디버그 오버레이는 `onGeometryChange`로 반응형으로 읽었는데, 여기서는 **활성 occlusion 2개**가 보고됐습니다. 순서는 첫 번째 값이 `[]`이고 곧바로 2개가 들어오는 식이었습니다.
+  - 카메라 구멍: (399.7, 29.3), 37×37pt
+  - 카메라와 status 열 전체: (382, 0), 84×170pt
+  - 두 영역 모두 뷰 bounds(382pt 폭) **바깥**의 좌표로 보고됩니다. 즉 뷰와 교차하지 않아도 반환됩니다.
+  - **실무 결론:** safe area만 지키면 외부 카메라와 Dynamic Island는 피해집니다. safe area를 무시하는 full-bleed 커스텀 UI를 만들 때는 occlusion region으로 **정확한 모양**을 피할 수 있습니다. 이때 **첫 값이 비어 있을 수 있으므로 반드시 반응형으로 읽어야 합니다**.
 - **세로 바의 공간 트레이드오프:** 세로 바가 켜져 있으면 콘텐츠 영역이 382×562(폭 −84, 높이 확보), 꺼져 있으면 466×462(폭 전부, 높이 −100)입니다. S2와 S6이 "세로 공간을 확보하려고 바를 옆으로 옮긴다"고 한 설명과 수치가 맞습니다.
 - 세로 바가 켜져 있을 때 툴바 배치는 S6 5:07의 설명과 일치합니다. `.cancellationAction`(Close)은 세로 바 **맨 위**(status 아래), `.bottomBar` 아이템은 **맨 아래**로 갑니다.
 - 이전 SDK(27.0)로 빌드하면 S1 0:30의 설명대로 "status bar와 카메라의 왼쪽 공간"만 사용합니다. 이 경우 배경도 카메라 열까지 확장되지 않습니다.
@@ -34,7 +38,7 @@
    - Split View에서는 왼쪽 앱의 컨트롤이 왼쪽에 옵니다(D1).
 5. 세로 바가 필요 없는 몰입형 화면(전체 화면 플레이어, 계산기형 UI)은 `toolbarVerticalBehavior(.disabled)`로 세로 바를 끄고 전체 폭을 쓸 수 있습니다(S2 14:21, D9).
    - 단, **"as long as nothing conflicts with the Dynamic Island or the status bar"** 조건을 지켜야 합니다(D1).
-   - 세로 바를 꺼도 카메라 영역은 **항상 존재하는 occlusion region**입니다(D2: "the outer front-facing camera always occludes your view").
+   - 세로 바를 꺼도 카메라 영역은 **항상 존재하는 occlusion region**입니다(D2: "the outer front-facing camera always occludes your view"). 세로 바가 켜진 상태에서 측정으로 확인했습니다(M9).
 6. 배경 이미지를 세로 바 아래까지 자연스럽게 확장하려면 `backgroundExtensionEffect()`나 `UIBackgroundExtensionView`를 씁니다(D2).
 
 ## 근거 캡처 (시뮬레이터, 외부 화면, 닫힌 상태)

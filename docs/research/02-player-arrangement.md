@@ -2,7 +2,17 @@
 
 > **EN summary:** Mostly yes, but pick the style and the primary/secondary roles on purpose. Apple's docs show `.overlay` with **controls as primary** and **the video as secondary**. In the partially open posture the overlay arrangement puts **primary at the trailing/bottom side and secondary at the leading/top side** of the fold (D2), which gives render on top and controls at the bottom. `.split` also stacks the views vertically when the container is taller than wide, with primary on top. So with `.split` you would make the *render* the primary. The two choices behave differently when the device is closed or fully open. Needs simulator verification.
 
-상태: **조사 완료. 구현과 캡처는 아직입니다.**
+상태: **구현 완료(`02_PlayerArrangementExperiment.swift`). 닫힌 외부 화면은 측정을 마쳤고, 펼침과 접힘 자세는 Device Hub에서 자세를 바꾼 뒤 캡처할 예정입니다.**
+
+## 측정 결과 (외부 화면, 닫힘, 세로, M10)
+
+| `.overlay` (primary=컨트롤) | `.split` (primary=렌더) |
+|---|---|
+| ![](../images/02/closed-overlay-outer.png) | ![](../images/02/closed-split-outer.png) |
+| 컨트롤이 **영상 위에 겹쳐집니다**. 일반적인 플레이어 형태입니다. 컨트롤 frame은 콘텐츠 전체(0,82 382×562)입니다. | **렌더는 위, 컨트롤은 아래**입니다(0,363 382×281). 세로가 긴 컨테이너라서 위아래로 분할됩니다. |
+
+- 두 경우 모두 `overlayArrangementZIndex`는 0입니다. 겹쳐진 상태인데도 0이 나오므로, 이 값의 의미는 접힘 상태의 값과 비교해 확인해야 합니다.
+- 결론(부분): 닫힌 상태에서 `.overlay`는 "영상 위 HUD", `.split`은 "위아래 고정 분할"로 동작합니다. 가설 H1, 즉 랩톱 자세에서 `.overlay`가 렌더는 위, 컨트롤은 아래로 가는지는 **접힘 자세 캡처로 확인해야 합니다**.
 
 ## 결론 (문서 기준, 실험으로 검증 필요)
 - **1순위: `.overlay`에 primary=컨트롤, secondary=렌더 화면**

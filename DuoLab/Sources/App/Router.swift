@@ -51,6 +51,8 @@ enum Experiment: String, CaseIterable, Identifiable, Hashable {
 
 /// Deep links for the capture tool:
 ///   duolab://experiment/<id>[?variant=<name>&overlay=0|1]
+/// The capture script passes the link as a launch argument (`-openURL <url>`) instead of
+/// `simctl openurl`, which shows an "Open in …?" confirmation when two apps share a scheme.
 /// Launch argument `-debugOverlay NO` hides the overlay by default.
 @MainActor @Observable
 final class Router {
@@ -58,8 +60,14 @@ final class Router {
     var variant: String?
     var showsOverlay: Bool = UserDefaults.standard.object(forKey: "debugOverlay") as? Bool ?? true
 
+    init() {
+        if let link = UserDefaults.standard.string(forKey: "openURL"), let url = URL(string: link) {
+            open(url)
+        }
+    }
+
     func open(_ url: URL) {
-        guard url.scheme == "duolab", url.host() == "experiment",
+        guard url.scheme?.hasPrefix("duolab") == true, url.host() == "experiment",
               let id = url.pathComponents.dropFirst().first,
               let experiment = Experiment(rawValue: id) else { return }
         let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
