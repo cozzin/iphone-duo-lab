@@ -63,6 +63,7 @@ Path: `Xcode-27.1.0-Beta.app/.../iPhoneSimulator27.1.sdk/System/Library/Framewor
 | M9 | DuoLab debug overlay (`onGeometryChange`, reactive), outer display, closed, vertical bar active: **2 active occlusion regions**: camera hole (399.7, 29.3, 37×37) and camera + status column (382, 0, 84×170), both outside the 382 pt view bounds. The first geometry pass reports `[]`, and the regions follow immediately | Q3, Q7 |
 | M10 | Experiment 02, outer display, closed: `.split` → render (primary) on top, controls below at (0, 363, 382×281); `.overlay` → controls (primary) layered over the full-size video (secondary), controls frame = full content area (0, 82, 382×562). `overlayArrangementZIndex` = 0 in both cases | Q2 |
 | M11 | Half-open 130° (book posture: inner display landscape, vertical hinge): view 867×635 pt (h=R, v=R), safe T0 L0 B34 R84 (vertical bar trailing); **division (455.5, 0, 40×669) active**; inner camera occlusion (677.3, 21, 58×37) **inactive**; status column occlusion active. Exp 02 `.overlay` → secondary (video) leading, primary (controls) trailing at (495.5, 82, 371.5×553); `.split` gives the same layout; zIndex 0 | Q2, Q3, Q7 |
+| M12 | Fully open 180° (inner display landscape): view 867×635 pt, h=R v=R, safe T0 L0 B34 R84; division (455.5, 0, **40×669**) reported **inactive** (width 40, not 0 as S3 7:50 says); inner camera occlusion inactive. Exp 02 `.overlay` → controls layered over the full video again (0, 82, 867×553); `.split` → always 50/50 side by side (433.5 pt each). Exp 05 **portrait-only target rendered landscape 867×635** (orientation lock ignored on the inner display, confirming S1 2:46) | Q2, Q3, Q5 |
 | M6 | The same probe linked with **SDK 27.0** (compatibility): window 386 pt wide, left of the camera/status column; safe area R0; `toolbarVerticalEdge=nil`. Reproduces S1 0:30 | Q5, Q7 |
 
 ## Third party 👥
@@ -79,6 +80,8 @@ Path: `Xcode-27.1.0-Beta.app/.../iPhoneSimulator27.1.sdk/System/Library/Framewor
 | [T8](https://ecorpit.com/iphone-duo-adaptive-layout-arrangementview-reserved-regions-2026/) | ecorpit, ArrangementView/reserved regions overview | general |
 
 ## Known discrepancies to verify
+
+0. **Width of the inactive division.** S3 (7:50) says it "has a width of zero" when flat. Measured (M12): it is reported inactive, but its frame is still **40 pt wide**. Filter on `isActive` rather than on the width.
 
 1. **Are inactive reserved regions returned by default?** S3 (7:50) says only active regions are returned unless you pass `.includeInactive`. D5 says `reservedRegions` returns intersecting regions "regardless of whether they are currently active". → Verify in experiment 03.
 2. **Orientation on the inner display.** S1 (2:46) says "The inner display doesn't honor your supported interface orientations." S1 (3:57) says "iPhone Duo respects your supported interface orientations, but your app will scale on the inner display". → Verify in experiment 05 with a portrait-only target.

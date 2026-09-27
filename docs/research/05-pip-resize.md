@@ -4,6 +4,15 @@
 
 상태: **조사 완료. 시뮬레이터 재현은 아직입니다(PiP 고정을 자동화할 수 있는지부터 확인 필요).**
 
+## 측정 결과: portrait 고정 앱, 완전히 펼친 내부 화면 (M12)
+
+![](../images/05/open-portraitonly-inner.png)
+
+- 타겟 `DuoLabPortraitOnly`는 Info.plist에 portrait만 지정했습니다. 그런데도 내부 화면에서 **가로 867×635pt(h:R v:R)로 리사이즈되어 그려졌습니다**. 레터박스도 회전 고정도 없습니다.
+- 즉 "The inner display doesn't honor your supported interface orientations"(S1 2:46)를 **직접 확인했습니다**.
+- 고정 높이 300pt 히어로가 화면의 거의 절반을 차지하고, 리스트는 3줄만 보입니다. 하단 CTA는 **힌지 영역(주황)과 겹칩니다**. 높이를 가정한 레이아웃이 어떻게 깨지는지 보여주는 예시입니다.
+- PiP 상단 고정 상태는 아직 캡처하지 못했습니다(수동 재현 필요).
+
 ## 공식 동작 (근거)
 - "when a video is playing in picture-in-picture, you can now **pin it to the top of the screen** to keep watching it. **Your current app resizes vertically to fit the space that's left.** And if you partially fold the device, the video extends to fill half of the screen." (S6 ~1:40)
 - "iPhone Duo has a completely new layout, stacking video and apps together. **Your app handles both of these layouts the same.**" (S4 2:59). 즉 Split View(좌우)와 같은 방식으로, size class와 scene geometry로 대응합니다.
