@@ -46,6 +46,19 @@
 - 기록할 값: 각 variant의 `overlayArrangementZIndex`, `splitArrangementAxis`, primary와 secondary의 frame.
 - 결과: _TBD_
 
+## 측정 결과: 책 자세 (내부 화면 가로, 힌지 세로, 130°, M11)
+
+| `.overlay` (primary=컨트롤) | `.split` (primary=렌더) |
+|---|---|
+| ![](../images/02/half130-overlay-inner.png) | ![](../images/02/half130-split-inner.png) |
+
+- **division region**: (455.5, 0) 40×669pt, 활성. 주황색 세로 띠입니다.
+- `.overlay`: 겹쳐 있던 두 뷰가 **좌우로 분리**됩니다. **렌더(secondary)는 leading(왼쪽), 컨트롤(primary)은 trailing(오른쪽)**입니다. 컨트롤 frame은 (495.5, 82) 371.5×553으로, 힌지 오른쪽 영역에 딱 맞습니다. D2 문서의 설명("primary는 trailing")과 **일치합니다. H2 확인.**
+- `.split`: 결과 화면이 overlay와 같습니다. 렌더(primary)가 왼쪽, 컨트롤이 오른쪽입니다.
+- 두 경우 모두 `overlayArrangementZIndex`는 0입니다.
+- 책 자세에서는 "영상 위, 컨트롤 아래"가 아니라 **좌우 배치**가 됩니다. 플레이어로는 영상이 화면 절반만 쓰게 되므로, 이 자세에서 좌우 배치가 괜찮은지는 디자인 판단이 필요합니다.
+- H1(랩톱 자세에서 영상 위, 컨트롤 아래)은 **내부 화면 세로 + 가로 힌지 자세**에서 캡처해야 확인할 수 있습니다.
+
 ## 확인할 가설
 - H1: `.overlay`는 랩톱 자세에서 렌더를 위, 컨트롤을 아래에 배치한다.
 - H2: 책 자세(세로 힌지)에서 `.overlay`는 렌더를 왼쪽(leading), 컨트롤을 오른쪽(trailing)에 배치한다. 이 경우 플레이어에 적합한지 따로 판단해야 한다.
