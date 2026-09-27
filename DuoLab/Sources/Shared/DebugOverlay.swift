@@ -55,6 +55,7 @@ private struct DebugOverlayModifier: ViewModifier {
                             .background(.black.opacity(0.7), in: .rect(cornerRadius: 6))
                             .foregroundStyle(.white)
                             .padding(8)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     .allowsHitTesting(false)
