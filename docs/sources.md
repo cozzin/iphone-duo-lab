@@ -73,6 +73,7 @@ Path: `Xcode-27.1.0-Beta.app/.../iPhoneSimulator27.1.sdk/System/Library/Framewor
 | M19 | Closed (outer portrait): ZStack + overlay `ArrangementView` alert → centered in the 382×562 content area left of the vertical bar. While closing, the log recorded intermediate scene sizes 585×835 → 594×350 → 298×562 (x=84, vertical bar on the leading side) → 382×562; the alert region and the screen stayed identical at every step | Q3, Q6 |
 | M20 | Book posture 130°, centered sign-in form (maxWidth 400): as-is → form (233.5, 159.5, 400×398) crosses the fold (455.5–495.5) with the title, fields and button on the crease; `ArrangementView(.split.axes(.horizontal))` → form in the leading region (0, 82, 400 wide), illustration in the trailing region (495.5, 82, 371.5×553); overlay-primary move → form in the trailing region (495.5, 159.5, 371.5×398) | Q3 |
 | M21 | Fully open 180°, centered sign-in form: split → 50:50 two columns (form at 0–400, illustration 433.5×553); overlay-primary move → centered (233.5, 159.5, 400×398), the same as the plain centered layout | Q3 |
+| M22 | Closed (outer portrait), centered sign-in form with `ArrangementView(.split.axes(.horizontal))`: only the primary (form) is shown, full content width (0, 82, 382×398); the secondary illustration still reports a frame but is not drawn | Q3 |
 | M6 | The same probe linked with **SDK 27.0** (compatibility): window 386 pt wide, left of the camera/status column; safe area R0; `toolbarVerticalEdge=nil`. Reproduces S1 0:30 | Q5, Q7 |
 
 ## Third party 👥
