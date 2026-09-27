@@ -12,6 +12,8 @@ struct CustomPopupExperiment: View {
         switch router.variant {
         case "arrEmpty", "arrClear", "arrAlert":
             ArrangementAlertHost(variant: router.variant ?? "")
+        case "zNone", "zAlert":
+            ZStackArrangementAlertHost(showsAlert: router.variant == "zAlert")
         default:
             standard
         }
@@ -99,6 +101,34 @@ struct ArrangementAlertHost: View {
         case "arrAlert": PopupCard(title: "Custom alert in primary") {}
         default: EmptyView()
         }
+    }
+}
+
+/// Alternative: the screen stays at the bottom of a ZStack, untouched. Only while an alert is shown,
+/// an overlay ArrangementView is stacked *above* it: primary = alert, secondary = empty.
+/// Question: does the arrangement place the alert off the hinge without affecting the screen below?
+struct ZStackArrangementAlertHost: View {
+    var showsAlert: Bool
+
+    var body: some View {
+        ZStack {
+            ScreenContent()
+                .measured("screen")
+            if showsAlert {
+                ArrangementView {
+                    PopupCard(title: "Alert via stacked ArrangementView") {}
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)   // center inside its region
+                        .measured("alertRegion")
+                } secondary: {
+                    Color.clear
+                        .allowsHitTesting(false)
+                        .measured("emptySecondary")
+                }
+                .arrangementViewStyle(.overlay)
+                .background(.black.opacity(0.2))   // dim, like a modal
+            }
+        }
+        .navigationTitle("03 ZStack")
     }
 }
 

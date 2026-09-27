@@ -97,11 +97,43 @@ UIKit은 같은 개념으로 대응합니다. `view.reservedRegions(kind: .divis
 |---|---|
 | ![](../images/03/half130-arrEmpty-book-inner.png) | ![](../images/03/half130-arrAlert-book-inner.png) |
 
-결론: **이 방식은 쓰지 않습니다.**
+결론: **화면 전체를 secondary로 감싸는 방식은 쓰지 않습니다.** 대신 아래의 ZStack 방식을 씁니다.
 - **alert가 없어도, primary가 `EmptyView`여도** 접히는 순간 화면 콘텐츠가 왼쪽 영역(455.5pt)으로 줄어듭니다. **오른쪽 절반은 텅 비게 됩니다.**
 - alert 자체는 오른쪽 영역에 잘 들어가지만, 영역의 가운데가 아니라 **왼쪽 위에 붙습니다**. 가운데 정렬은 직접 해야 합니다.
 - alert가 뜰 때만 ArrangementView로 감싸는 방법도 생각해 볼 수 있습니다. 하지만 그 순간 콘텐츠가 절반으로 줄었다가 돌아오는 **큰 레이아웃 변화**가 생기고, 컨테이너가 바뀌면서 **화면 상태가 사라질 위험**도 있습니다. D1("Avoid extreme layout changes")에 어긋납니다.
 - → 커스텀 alert와 팝업은 **화면 위에 올리는 오버레이 레이어가 힌지 영역을 계산해 배치하는 방식**(`HingeAwareOverlay`, 실험 03)으로 처리합니다. `ArrangementView`는 **두 덩어리가 항상 함께 보이는 화면**(플레이어 등)에만 씁니다.
+
+## 검증: ZStack 위층에 ArrangementView를 쌓는 방식 (M16), 권장
+
+```swift
+ZStack {
+    Screen()                                   // 원래 화면: ArrangementView 밖에 있으므로 영향 없음
+    if showsAlert {
+        ArrangementView {
+            AlertCard().frame(maxWidth: .infinity, maxHeight: .infinity)  // primary: 영역 가운데에 배치
+        } secondary: {
+            Color.clear.allowsHitTesting(false)                           // 빈 자리
+        }
+        .arrangementViewStyle(.overlay)
+    }
+}
+```
+
+| alert 없음 | alert 표시 |
+|---|---|
+| ![](../images/03/half130-zNone-book-inner.png) | ![](../images/03/half130-zAlert-book-inner.png) |
+
+- 원래 화면: alert가 있든 없든 **867×553 전체 폭을 그대로 씁니다.**
+- alert 영역: (495.5, 82) 371.5×553. **힌지 오른쪽(trailing) 영역의 가운데**에 배치됩니다. Apple 가이드의 "책 자세에서 alert는 trailing"과 일치합니다.
+- **장점**
+  - 힌지 좌표를 계산하는 코드가 **0줄**입니다.
+  - 영역 선택, RTL 반전, 자세 판단을 모두 시스템에 맡깁니다.
+  - alert가 없을 때는 ArrangementView 자체가 없어서 원래 화면에 영향이 없습니다.
+- **한계와 확인할 것**
+  - 항상 trailing/bottom 영역으로만 갑니다. 트리거가 있는 쪽으로 보내는 "맥락 우선" 배치는 불가능합니다. 그게 필요하면 `HingeAwareOverlay`를 씁니다.
+  - 로그상 처음 한 프레임은 전체 폭(867)이었다가 오른쪽 영역으로 정착합니다. **등장 애니메이션 중에 튀어 보이는지** 실제로 확인해야 합니다.
+  - 완전히 펼친 자세, 랩톱 자세, 닫힌 자세에서의 위치는 추가로 캡처해야 합니다. 펼치면 overlay가 겹침 상태이므로 화면 가운데에 올 것으로 예상됩니다.
+- 참고: 같은 캡처에서 그리드(스크롤 콘텐츠, A 분류)는 힌지에 걸쳐도 괜찮습니다. 반면 **하단 고정 버튼 "Fixed action"(C 분류)은 힌지 위에 놓여 있습니다**. 이것이 `.avoidingHinge`가 필요한 전형적인 예입니다.
 
 ## 4. 결정해야 할 것
 - C 분류 기본 방향의 우선순위: `contextual → bottom → trailing`으로 할지 여부
