@@ -16,6 +16,14 @@ struct LayoutSnapshot: Equatable {
     var insets: EdgeInsets = .init()
     var occlusions: [ReservedRegion] = []
     var divisions: [ReservedRegion] = []
+    /// Same queries without `.includeInactive`, to check whether inactive regions come back by default
+    /// (S3 7:50 says no, the ReservedRegion doc says yes; docs/sources.md discrepancy #1).
+    var defaultQueryCounts: (occlusion: Int, division: Int) = (0, 0)
+
+    static func == (a: Self, b: Self) -> Bool {
+        a.size == b.size && a.insets == b.insets && a.occlusions == b.occlusions && a.divisions == b.divisions
+            && a.defaultQueryCounts == b.defaultQueryCounts
+    }
 }
 
 private struct DebugOverlayModifier: ViewModifier {
@@ -33,7 +41,9 @@ private struct DebugOverlayModifier: ViewModifier {
                     size: proxy.size,
                     insets: proxy.safeAreaInsets,
                     occlusions: proxy.reservedRegions(kind: .occlusion, options: .includeInactive),
-                    divisions: proxy.reservedRegions(kind: .division, options: .includeInactive)
+                    divisions: proxy.reservedRegions(kind: .division, options: .includeInactive),
+                    defaultQueryCounts: (proxy.reservedRegions(kind: .occlusion).count,
+                                         proxy.reservedRegions(kind: .division).count)
                 )
             } action: { new in
                 snapshot = new
@@ -74,7 +84,7 @@ private struct DebugOverlayModifier: ViewModifier {
     }
 
     private func describe(_ s: LayoutSnapshot) -> String {
-        "size=\(Int(s.size.width))x\(Int(s.size.height)) h=\(short(h)) v=\(short(v)) safe=\(Int(s.insets.top)),\(Int(s.insets.leading)),\(Int(s.insets.bottom)),\(Int(s.insets.trailing)) div=\(s.divisions.map { "\($0.frame) active=\($0.isActive)" }) occ=\(s.occlusions.map { "\($0.frame) active=\($0.isActive)" })"
+        "size=\(Int(s.size.width))x\(Int(s.size.height)) h=\(short(h)) v=\(short(v)) safe=\(Int(s.insets.top)),\(Int(s.insets.leading)),\(Int(s.insets.bottom)),\(Int(s.insets.trailing)) div=\(s.divisions.map { "\($0.frame) active=\($0.isActive)" }) occ=\(s.occlusions.map { "\($0.frame) active=\($0.isActive)" }) defaultQuery(occ=\(s.defaultQueryCounts.occlusion),div=\(s.defaultQueryCounts.division))"
     }
 }
 

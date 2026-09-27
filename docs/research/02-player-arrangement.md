@@ -14,7 +14,7 @@
 - 두 경우 모두 `overlayArrangementZIndex`는 0입니다. 겹쳐진 상태인데도 0이 나오므로, 이 값의 의미는 접힘 상태의 값과 비교해 확인해야 합니다.
 - 결론(부분): 닫힌 상태에서 `.overlay`는 "영상 위 HUD", `.split`은 "위아래 고정 분할"로 동작합니다. 가설 H1, 즉 랩톱 자세에서 `.overlay`가 렌더는 위, 컨트롤은 아래로 가는지는 **접힘 자세 캡처로 확인해야 합니다**.
 
-## 결론 (문서 기준, 실험으로 검증 필요)
+## 결론 (처음 세운 가설. 아래 측정 결과로 검증했습니다)
 - **1순위: `.overlay`에 primary=컨트롤, secondary=렌더 화면**
   - Apple 문서의 overlay 예시가 바로 `ArrangementView { PlayerControls() } secondary: { VideoPlayer() }.arrangementViewStyle(.overlay)`입니다(D3, D4).
   - 문서는 이 구성을 "full screen experiences like media players, where playback controls overlay a video surface"에 적합하다고 설명합니다.
@@ -68,6 +68,25 @@
 - `.overlay`: 다시 **컨트롤이 영상 전체 위에 겹쳐집니다**. 컨트롤 frame은 (0, 82) 867×553입니다. 즉 overlay는 **접힘 여부(active division)에 따라 겹침과 좌우 분리를 오갑니다**.
 - `.split`: 펼친 상태에서도 **항상 50:50으로 좌우 분할**됩니다(각 433.5pt). 가로가 긴 컨테이너에서 split은 무조건 나눕니다.
 - 결론: 영상 위에 컨트롤을 겹치는 몰입형 플레이어가 기본이고 접었을 때만 분리하고 싶다면 **`.overlay`가 맞습니다**. `.split`은 펼침 상태에서도 영상을 절반 크기로 만듭니다.
+
+## 측정 결과: 랩톱 자세 (내부 화면 세로, 힌지 가로, 130°, M13). 핵심 질문에 대한 답
+
+| `.overlay` (primary=컨트롤) | `.split` (primary=영상) |
+|---|---|
+| ![](../images/02/half130-overlay-laptop-inner.png) | ![](../images/02/half130-split-laptop-inner.png) |
+
+- **H1 확인: 영상은 위, 컨트롤은 아래입니다.** 컨트롤 frame은 (0, 495.5) 669×421.5이고, 힌지(0, 373.5, 669×40)의 바로 아래 영역에 딱 맞습니다.
+- `.split`도 같은 배치가 됩니다(세로가 긴 컨테이너이므로 primary=영상이 위).
+- 네 자세의 결과를 합친 결론:
+
+| 자세 | `.overlay` (primary=컨트롤) | `.split` (primary=영상) |
+|---|---|---|
+| 닫힘 (외부 세로) | 겹침 (컨트롤이 영상 위 HUD) | 영상 위 / 컨트롤 아래 |
+| 완전히 펼침 (내부 가로) | 겹침 | 좌우 50:50 |
+| 책 자세 (힌지 세로) | 영상 왼쪽 / 컨트롤 오른쪽 | 동일 |
+| **랩톱 자세 (힌지 가로)** | **영상 위 / 컨트롤 아래** | 동일 |
+
+→ **몰입형 플레이어에는 `.overlay`(primary=컨트롤)가 정답**입니다. 평소에는 겹쳐 있다가, 접었을 때만 힌지 기준으로 분리됩니다. 자세를 판단하는 코드는 한 줄도 필요 없습니다.
 
 ## 분할 기준: 앱 기준 50:50이 아니라 "물리적 힌지" 기준
 

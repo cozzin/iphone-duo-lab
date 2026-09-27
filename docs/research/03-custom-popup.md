@@ -2,7 +2,23 @@
 
 > **EN summary:** Correct. System alerts, action sheets, menus, popovers and sheets reposition around the fold automatically. Custom overlays do not. Read `reservedRegions(kind: .division)` from a `GeometryProxy` (or `UIView`) and place the popup inside one of the resulting sub-regions. Apple's placement guidance: in the **book** posture, move alerts to the **trailing** side (where the UI continues when the device closes). In the **tabletop/laptop** posture, interactive UI goes to the **bottom** half. When both work, **stay contextual** (near the thing that triggered it). If the popup scrolls, don't displace it.
 
-상태: **조사 완료. 구현과 캡처는 아직입니다.**
+상태: **구현 완료. 랩톱 자세에서 측정했습니다(M13).**
+
+## 측정 결과: 랩톱 자세 (힌지 가로, 130°)
+
+| 커스텀 (나이브, 가운데 배치) | 커스텀 (hinge-aware) |
+|---|---|
+| ![](../images/03/half130-naive-laptop-inner.png) | ![](../images/03/half130-hingeAware-laptop-inner.png) |
+| **팝업이 힌지(주황 띠)에 걸칩니다.** 제목이 접히는 부분에 놓입니다. | 힌지 **아래 영역**의 가운데에 배치됩니다. 트리거 정보가 없을 때의 기본 규칙(bottom)이 적용된 결과입니다. |
+
+| 시스템 `.alert` | 시스템 `.sheet` (medium) |
+|---|---|
+| ![](../images/03/half130-alert-laptop-inner.png) | ![](../images/03/half130-sheet-laptop-inner.png) |
+| 시스템이 **아래 영역으로 옮깁니다**. 화면 중앙이 아닙니다. | sheet 윗변이 **힌지 바로 아래에서 멈춥니다**. |
+
+- 결론: **"시스템 팝업은 피하고, 커스텀 팝업은 피하지 않는다"가 사실로 확인됐습니다.** `reservedRegions(.division)` 기반의 배치로 해결됩니다.
+- 시스템 alert도 **아래 영역**을 택했습니다. 테이블 자세에서는 아래쪽에 인터랙티브 요소를 둔다는 Apple 가이드와 일치하고, 우리 기본 규칙(bottom)과도 같습니다.
+- **추가 발견:** 화면 안의 일반 SwiftUI `Button`("Sheet" 버튼)은 **힌지 위에 그대로 놓였습니다**. 시스템이 밀어주는 것은 sheet, alert, menu, toolbar 같은 시스템 컴포넌트뿐입니다(S6 9:28). 직접 배치한 콘텐츠의 버튼은 **직접 피해야 합니다**.
 
 ## 시스템 동작 (근거)
 - "Action sheets, alerts, menus, and popovers … **The system automatically repositions components around the reserved region.**" (S3 5:12)

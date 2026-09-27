@@ -4,6 +4,7 @@ import SwiftUI
 struct CustomPopupExperiment: View {
     enum Kind: String { case alert, sheet, popover, naive, hingeAware }
 
+    @Environment(Router.self) private var router
     @State private var presented: Kind?
     @State private var trigger: CGRect?
 
@@ -15,6 +16,14 @@ struct CustomPopupExperiment: View {
         .frame(maxHeight: .infinity)
         .coordinateSpace(.named("popupSpace"))
         .navigationTitle("03 Custom popup")
+        .task {
+            // Capture tool: duolab://experiment/03?variant=<kind> presents it without a tap.
+            // No trigger frame → the hinge-aware rule falls back to the trailing/bottom region.
+            if let kind = router.variant.flatMap(Kind.init(rawValue:)), kind != .popover {
+                try? await Task.sleep(for: .milliseconds(600))
+                presented = kind
+            }
+        }
         .alert("System alert", isPresented: binding(.alert)) { Button("OK") {} }
         .sheet(isPresented: binding(.sheet)) {
             Text("System sheet").presentationDetents([.medium])
