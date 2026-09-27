@@ -69,6 +69,7 @@ Path: `Xcode-27.1.0-Beta.app/.../iPhoneSimulator27.1.sdk/System/Library/Framewor
 | M15 | Book posture 130°: overlay `ArrangementView` with the screen as secondary and the custom alert as primary. For primary = `EmptyView` (0×0), `Color.clear`, and an alert card alike, the **secondary shrinks to the leading region (455.5×553) whenever the device is folded**, leaving the trailing region blank. The alert card is placed at the top-leading corner of the trailing region, not centered | Q3 |
 | M16 | Book posture 130°: `ZStack { screen; if alert { ArrangementView(.overlay) { alert } secondary: { Color.clear } } }`. The screen keeps 867×553 with or without the alert; the alert region is (495.5, 82, 371.5×553), i.e. centered in the trailing region. The first frame is full width (867) before settling. The fixed bottom button in the screen sits on the hinge | Q3 |
 | M17 | Fully open 180° (inner landscape): ZStack + overlay `ArrangementView` alert → alert region = full area (0, 82, 867×553), so the alert is centered on screen, like a normal alert; the screen stays 867×553 | Q3 |
+| M18 | Laptop posture 130° (inner portrait): ZStack + overlay `ArrangementView` alert → alert region (0, 495.5, 669×421.5), centered below the hinge; empty secondary takes the top region; the screen keeps the full 669 pt width | Q3 |
 | M6 | The same probe linked with **SDK 27.0** (compatibility): window 386 pt wide, left of the camera/status column; safe area R0; `toolbarVerticalEdge=nil`. Reproduces S1 0:30 | Q5, Q7 |
 
 ## Third party 👥
